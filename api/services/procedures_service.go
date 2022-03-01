@@ -1,6 +1,9 @@
 package services
 
-import "know-sync-api/domain/procedures"
+import (
+	"know-sync-api/domain/procedures"
+	"know-sync-api/utils/pagination_utils"
+)
 
 func CreateProcedure(procedure procedures.Procedure) (*procedures.Procedure, error) {
 	if err := procedure.Save(); err != nil {
@@ -49,12 +52,22 @@ func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 	return t, nil
 }
 
-func GetProcedures() (*[]procedures.Procedure, error) {
-	ts, err := procedures.GetAll()
+func GetProcedures(limit int, offset int) (*[]procedures.Procedure, error) {
+	ps, err := procedures.Index(limit, offset)
 	if err != nil {
 		return nil, err
 	}
-	return ts, nil
+	return ps, nil
+}
+
+func GetPagination(page int, limit int) (*pagination_utils.Pagination, error) {
+	itemsCount, err := procedures.CountAll()
+	if err != nil {
+		return nil, err
+	}
+
+	pagination := pagination_utils.NewPagination(page, limit, int(itemsCount))
+	return pagination, nil
 }
 
 func DeleteProcedure(procedureID uint) error {

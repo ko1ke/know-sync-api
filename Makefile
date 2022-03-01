@@ -10,4 +10,4 @@ up:
 down:
 	docker-compose down
 
-.PHONY: attach up down
+.PHONY: attach up down build

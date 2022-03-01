@@ -38,13 +38,26 @@ func GetProcedure(c *gin.Context) {
 }
 
 func GetProcedures(c *gin.Context) {
-	procedures, getErr := services.GetProcedures()
+	page, pageErr := getPage(c.Query("page"))
+	if pageErr != nil {
+		logrus.Error(pageErr)
+		c.JSON(http.StatusBadRequest, gin.H{"error": pageErr.Error()})
+		return
+	}
+
+	var limit int = 10
+	var offset int = limit * (page - 1)
+
+	procedures, getErr := services.GetProcedures(limit, offset)
 	if getErr != nil {
 		logrus.Error(getErr)
 		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, procedures)
+
+	pagination, _ := services.GetPagination(page, limit)
+
+	c.JSON(http.StatusOK, gin.H{"procedures": procedures, "pagination": pagination})
 }
 
 func CreateProcedure(c *gin.Context) {
@@ -122,6 +135,17 @@ func getProcedureID(procedureIDParam string) (uint, error) {
 		return 0, procedureErr
 	}
 	return uint(procedureID), nil
+}
+
+func getPage(pageParam string) (int, error) {
+	if pageParam == "" {
+		return 1, nil
+	}
+	page, pageErr := strconv.Atoi(pageParam)
+	if pageErr != nil {
+		return 0, pageErr
+	}
+	return page, nil
 }
 
 func DeleteProcedure(c *gin.Context) {

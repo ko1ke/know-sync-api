@@ -11,12 +11,20 @@ func (p *Procedure) Get() error {
 	return nil
 }
 
-func GetAll() (*[]Procedure, error) {
+func Index(limit int, offset int) (*[]Procedure, error) {
 	var procedures *[]Procedure
-	if result := postgres_db.Client.Find(&procedures); result.Error != nil {
+	if result := postgres_db.Client.Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
 		return nil, result.Error
 	}
 	return procedures, nil
+}
+
+func CountAll() (int64, error) {
+	var count int64
+	if result := postgres_db.Client.Table("procedures").Count(&count); result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
 }
 
 func (p *Procedure) Update() error {
