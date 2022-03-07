@@ -14,5 +14,5 @@ type Step struct {
 	Title       string         `json:"title"`
 	Content     string         `json:"content"`
 	ImgName     string         `json:"imgName"`
-	ProcedureId uint           `json:"procedureId"`
+	ProcedureID uint           `json:"procedureId"`
 }

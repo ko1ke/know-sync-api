@@ -35,6 +35,15 @@ func GetProcedure(c *gin.Context) {
 		return
 	}
 
+	steps, getErr := services.GetSteps(uint(procedureID))
+
+	if getErr != nil {
+		logrus.Error(getErr)
+		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		return
+	}
+
+	procedure.Steps = steps
 	c.JSON(http.StatusOK, procedure)
 }
 

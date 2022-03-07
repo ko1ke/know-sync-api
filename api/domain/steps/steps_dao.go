@@ -2,7 +2,6 @@ package steps
 
 import (
 	"know-sync-api/datasources/postgres_db"
-	"know-sync-api/domain/procedures"
 )
 
 func (s *Step) Get() error {
@@ -12,12 +11,12 @@ func (s *Step) Get() error {
 	return nil
 }
 
-func Index(p *procedures.Procedure) error {
-	var steps *[]Step
-	if result := postgres_db.Client.Where("procedure_id = ?", p.ID).First(&steps); result.Error != nil {
-		return result.Error
+func Index(procedureId uint) ([]Step, error) {
+	var steps []Step
+	if result := postgres_db.Client.Where("procedure_id = ?", procedureId).Find(&steps); result.Error != nil {
+		return nil, result.Error
 	}
-	return nil
+	return steps, nil
 }
 
 func (s *Step) Update() error {
