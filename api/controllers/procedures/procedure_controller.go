@@ -1,7 +1,8 @@
 package procedures
 
 import (
-	"know-sync-api/controllers/users"
+	// "know-sync-api/controllers/users"
+
 	"know-sync-api/domain/procedures"
 	"know-sync-api/services"
 	"net/http"
@@ -78,20 +79,35 @@ func CreateProcedure(c *gin.Context) {
 		return
 	}
 
-	user, err := users.GetUserFromToken(c.Request)
-	if err != nil {
-		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	// user, err := users.GetUserFromToken(c.Request)
+	// if err != nil {
+	// 	logrus.Error(err)
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
-	procedure.UserID = user.ID
+	// procedure.UserID = user.ID
 	newProcedure, saveErr := services.CreateProcedure(procedure)
 	if saveErr != nil {
 		logrus.Error(saveErr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": saveErr.Error()})
 		return
 	}
+
+	steps := procedure.Steps
+	if steps != nil {
+		for i := 0; i < len(steps); i++ {
+			steps[i].ProcedureID = newProcedure.ID
+		}
+		newSteps, saveErr := services.CreateSteps(steps)
+		if saveErr != nil {
+			logrus.Error(saveErr)
+			c.JSON(http.StatusBadRequest, gin.H{"error": saveErr.Error()})
+			return
+		}
+		newProcedure.Steps = newSteps
+	}
+
 	c.JSON(http.StatusCreated, newProcedure)
 }
 
@@ -129,14 +145,27 @@ func UpdateProcedure(c *gin.Context) {
 
 	isPartial := c.Request.Method == http.MethodPatch
 
-	result, err := services.UpdateProcedure(isPartial, procedure)
+	newProcedure, err := services.UpdateProcedure(isPartial, procedure)
 	if err != nil {
 		logrus.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	steps := procedure.Steps
+	for i := 0; i < len(steps); i++ {
+		steps[i].ProcedureID = uint(procedureID)
+	}
+
+	newSteps, err := services.DeleteAndCreateSteps(newProcedure.ID, steps)
+	if err != nil {
+		logrus.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	newProcedure.Steps = newSteps
+	c.JSON(http.StatusOK, newProcedure)
 }
 
 func getProcedureID(procedureIDParam string) (uint, error) {
