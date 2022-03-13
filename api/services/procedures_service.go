@@ -2,6 +2,7 @@ package services
 
 import (
 	"know-sync-api/domain/procedures"
+	"know-sync-api/domain/steps"
 	"know-sync-api/utils/pagination_utils"
 )
 
@@ -9,6 +10,18 @@ func CreateProcedure(procedure procedures.Procedure) (*procedures.Procedure, err
 	if err := procedure.Save(); err != nil {
 		return nil, err
 	}
+
+	ss := procedure.Steps
+	for i := 0; i < len(ss); i++ {
+		ss[i].ProcedureID = procedure.ID
+	}
+
+	newSs, err := steps.BulkCreate(ss)
+	if err != nil {
+		return nil, err
+	}
+
+	procedure.Steps = newSs
 
 	return &procedure, nil
 }
@@ -41,15 +54,45 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 			return nil, err
 		}
 	}
+
+	ss := procedure.Steps
+	for i := 0; i < len(ss); i++ {
+		ss[i].ProcedureID = procedure.ID
+	}
+
+	delErr := steps.BulkDeleteByProcedureId(procedure.ID, ss)
+	if delErr != nil {
+		return nil, delErr
+	}
+
+	if ss == nil {
+		return nil, nil
+	}
+
+	newSs, createErr := steps.BulkCreate(ss)
+	if createErr != nil {
+		return nil, createErr
+	}
+
+	procedure.Steps = newSs
+
 	return current, nil
 }
 
 func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
-	t := &procedures.Procedure{ID: procedureID}
-	if err := t.Get(); err != nil {
+	p := &procedures.Procedure{ID: procedureID}
+	if err := p.Get(); err != nil {
 		return nil, err
 	}
-	return t, nil
+
+	ss, err := steps.Index(procedureID)
+	if err != nil {
+		return nil, err
+	}
+
+	p.Steps = ss
+
+	return p, nil
 }
 
 func GetProcedures(limit int, offset int) (*[]procedures.Procedure, error) {

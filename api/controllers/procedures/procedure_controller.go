@@ -36,15 +36,6 @@ func GetProcedure(c *gin.Context) {
 		return
 	}
 
-	steps, getErr := services.GetSteps(uint(procedureID))
-
-	if getErr != nil {
-		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
-		return
-	}
-
-	procedure.Steps = steps
 	c.JSON(http.StatusOK, procedure)
 }
 
@@ -94,20 +85,6 @@ func CreateProcedure(c *gin.Context) {
 		return
 	}
 
-	steps := procedure.Steps
-	if steps != nil {
-		for i := 0; i < len(steps); i++ {
-			steps[i].ProcedureID = newProcedure.ID
-		}
-		newSteps, saveErr := services.CreateSteps(steps)
-		if saveErr != nil {
-			logrus.Error(saveErr)
-			c.JSON(http.StatusBadRequest, gin.H{"error": saveErr.Error()})
-			return
-		}
-		newProcedure.Steps = newSteps
-	}
-
 	c.JSON(http.StatusCreated, newProcedure)
 }
 
@@ -152,19 +129,6 @@ func UpdateProcedure(c *gin.Context) {
 		return
 	}
 
-	steps := procedure.Steps
-	for i := 0; i < len(steps); i++ {
-		steps[i].ProcedureID = uint(procedureID)
-	}
-
-	newSteps, err := services.DeleteAndCreateSteps(newProcedure.ID, steps)
-	if err != nil {
-		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	newProcedure.Steps = newSteps
 	c.JSON(http.StatusOK, newProcedure)
 }
 
