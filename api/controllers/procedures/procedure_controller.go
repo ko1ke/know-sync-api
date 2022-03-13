@@ -75,7 +75,7 @@ func CreateProcedure(c *gin.Context) {
 	var procedure procedures.Procedure
 	if err := c.ShouldBindJSON(&procedure); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -137,7 +137,7 @@ func UpdateProcedure(c *gin.Context) {
 	var procedure procedures.Procedure
 	if err := c.ShouldBindJSON(&procedure); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
