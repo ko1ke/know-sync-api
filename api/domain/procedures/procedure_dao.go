@@ -2,6 +2,8 @@ package procedures
 
 import (
 	postgres_db "know-sync-api/datasources/postgres_db"
+
+	"gorm.io/gorm"
 )
 
 func (p *Procedure) Get() error {
@@ -27,16 +29,15 @@ func CountAll() (int64, error) {
 	return count, nil
 }
 
-func (p *Procedure) Update() error {
-	if result := postgres_db.Client.Save(&p); result.Error != nil {
+func (p *Procedure) Update(tx *gorm.DB) error {
+	if result := tx.Save(&p); result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
 
-func (p *Procedure) PartialUpdate() error {
-	if result := postgres_db.Client.
-		Table("procedures").
+func (p *Procedure) PartialUpdate(tx *gorm.DB) error {
+	if result := tx.Table("procedures").
 		Where("id IN (?)", p.ID).
 		Updates(&p); result.Error != nil {
 		return result.Error
@@ -44,9 +45,9 @@ func (p *Procedure) PartialUpdate() error {
 	return nil
 }
 
-func (p *Procedure) Save() error {
+func (p *Procedure) Save(tx *gorm.DB) error {
 	// https://gorm.io/ja_JP/docs/error_handling.html
-	if result := postgres_db.Client.Create(&p); result.Error != nil {
+	if result := tx.Create(&p); result.Error != nil {
 		return result.Error
 	}
 	return nil

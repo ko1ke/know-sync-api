@@ -1,27 +1,37 @@
 package services
 
 import (
+	"know-sync-api/datasources/postgres_db"
 	"know-sync-api/domain/procedures"
 	"know-sync-api/domain/steps"
 	"know-sync-api/utils/pagination_utils"
+
+	"gorm.io/gorm"
 )
 
 func CreateProcedure(procedure procedures.Procedure) (*procedures.Procedure, error) {
-	if err := procedure.Save(); err != nil {
-		return nil, err
-	}
+	err := postgres_db.Client.Transaction(func(tx *gorm.DB) error {
+		if err := procedure.Save(tx); err != nil {
+			return err
+		}
 
-	ss := procedure.Steps
-	for i := 0; i < len(ss); i++ {
-		ss[i].ProcedureID = procedure.ID
-	}
+		ss := procedure.Steps
+		for i := 0; i < len(ss); i++ {
+			ss[i].ProcedureID = procedure.ID
+		}
 
-	newSs, err := steps.BulkCreate(ss)
+		newSs, err := steps.BulkCreate(tx, ss)
+		if err != nil {
+			return err
+		}
+
+		procedure.Steps = newSs
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
-
-	procedure.Steps = newSs
 
 	return &procedure, nil
 }
@@ -32,49 +42,56 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 		return nil, err
 	}
 
-	if err = current.Get(); err != nil {
+	if err := current.Get(); err != nil {
 		return nil, err
 	}
 
-	if isPartial {
-		if procedure.Title != "" {
+	txErr := postgres_db.Client.Transaction(func(tx *gorm.DB) error {
+		if isPartial {
+			if procedure.Title != "" {
+				current.Title = procedure.Title
+			}
+			if procedure.Content != "" {
+				current.Content = procedure.Content
+			}
+
+			if err := current.PartialUpdate(tx); err != nil {
+				return err
+			}
+		} else {
 			current.Title = procedure.Title
-		}
-		if procedure.Content != "" {
 			current.Content = procedure.Content
+			if err := current.Update(tx); err != nil {
+				return err
+			}
 		}
 
-		if err := current.PartialUpdate(); err != nil {
-			return nil, err
+		ss := procedure.Steps
+		for i := 0; i < len(ss); i++ {
+			ss[i].ProcedureID = current.ID
 		}
-	} else {
-		current.Title = procedure.Title
-		current.Content = procedure.Content
-		if err := current.Update(); err != nil {
-			return nil, err
+
+		delErr := steps.BulkDeleteByProcedureId(tx, procedure.ID, ss)
+		if delErr != nil {
+			return delErr
 		}
-	}
 
-	ss := procedure.Steps
-	for i := 0; i < len(ss); i++ {
-		ss[i].ProcedureID = procedure.ID
-	}
+		if ss == nil {
+			return nil
+		}
 
-	delErr := steps.BulkDeleteByProcedureId(procedure.ID, ss)
-	if delErr != nil {
-		return nil, delErr
-	}
+		newSs, createErr := steps.BulkCreate(tx, ss)
+		if createErr != nil {
+			return createErr
+		}
 
-	if ss == nil {
-		return nil, nil
-	}
+		current.Steps = newSs
+		return nil
+	})
 
-	newSs, createErr := steps.BulkCreate(ss)
-	if createErr != nil {
-		return nil, createErr
+	if txErr != nil {
+		return nil, txErr
 	}
-
-	procedure.Steps = newSs
 
 	return current, nil
 }

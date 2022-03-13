@@ -2,6 +2,8 @@ package steps
 
 import (
 	"know-sync-api/datasources/postgres_db"
+
+	"gorm.io/gorm"
 )
 
 func (s *Step) Get() error {
@@ -19,20 +21,20 @@ func Index(procedureId uint) ([]Step, error) {
 	return steps, nil
 }
 
-func BulkCreate(steps []Step) ([]Step, error) {
-	if result := postgres_db.Client.Save(&steps); result.Error != nil {
+func BulkCreate(tx *gorm.DB, steps []Step) ([]Step, error) {
+	if result := tx.Save(&steps); result.Error != nil {
 		return nil, result.Error
 	}
 	return steps, nil
 }
 
-func BulkDeleteByProcedureId(procedureId uint, ss []Step) error {
-	if result := postgres_db.Client.Where("procedure_id = ?", procedureId).Find(&ss); result.Error != nil {
+func BulkDeleteByProcedureId(tx *gorm.DB, procedureId uint, ss []Step) error {
+	if result := tx.Where("procedure_id = ?", procedureId).Find(&ss); result.Error != nil {
 		return result.Error
 	}
 
 	if len(ss) > 0 {
-		if result := postgres_db.Client.Delete(&ss); result.Error != nil {
+		if result := tx.Delete(&ss); result.Error != nil {
 			return result.Error
 		}
 	}
