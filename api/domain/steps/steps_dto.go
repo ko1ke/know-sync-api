@@ -11,8 +11,8 @@ type Step struct {
 	CreatedAt   time.Time      `json:"-"`
 	UpdatedAt   time.Time      `json:"-"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
-	Title       string         `json:"title"`
-	Content     string         `json:"content"`
-	ImgName     string         `json:"imgName"`
+	Title       string         `json:"title" binding:"max=100"`
+	Content     string         `json:"content" binding:"max=255"`
+	ImgName     string         `json:"imgName" binding:"max=255"`
 	ProcedureID uint           `json:"procedureId"`
 }

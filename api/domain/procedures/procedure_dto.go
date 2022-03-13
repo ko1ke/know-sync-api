@@ -12,8 +12,8 @@ type Procedure struct {
 	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
+	Title     string         `json:"title" binding:"required,max=100"`
+	Content   string         `json:"content" binding:"required,max=1000"`
 	UserID    uint           `json:"userId"`
 	Steps     []steps.Step   `json:"steps"`
 }
