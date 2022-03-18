@@ -3,6 +3,7 @@ module know-sync-api
 go 1.17
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
@@ -12,6 +13,7 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.7.0
 	github.com/twinj/uuid v1.0.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	gorm.io/driver/postgres v1.3.1
@@ -51,6 +53,7 @@ require (
 	github.com/onsi/gomega v1.15.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
@@ -59,4 +62,5 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/stretchr/testify.v1 v1.2.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
