@@ -1,11 +1,12 @@
 package services
 
 import (
+	"know-sync-api/datasources/postgres_db"
 	"know-sync-api/domain/users"
 )
 
 func CreateUser(user users.User) (*users.User, error) {
-	if err := user.Save(); err != nil {
+	if err := user.Save(postgres_db.Client); err != nil {
 		return nil, err
 	}
 
@@ -14,7 +15,7 @@ func CreateUser(user users.User) (*users.User, error) {
 
 func GetUser(userID uint) (*users.User, error) {
 	u := &users.User{ID: userID}
-	if err := u.Get(); err != nil {
+	if err := u.Get(postgres_db.Client); err != nil {
 		return nil, err
 	}
 	return u, nil
@@ -22,7 +23,7 @@ func GetUser(userID uint) (*users.User, error) {
 
 func GetUserByEmail(email string) (*users.User, error) {
 	u := &users.User{Email: email}
-	if err := u.GetByEmail(); err != nil {
+	if err := u.GetByEmail(postgres_db.Client); err != nil {
 		return nil, err
 	}
 	return u, nil
@@ -30,5 +31,5 @@ func GetUserByEmail(email string) (*users.User, error) {
 
 func DeleteUser(userID uint) error {
 	user := &users.User{ID: userID}
-	return user.Delete()
+	return user.Delete(postgres_db.Client)
 }

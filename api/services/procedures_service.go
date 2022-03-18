@@ -42,7 +42,7 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 		return nil, err
 	}
 
-	if err := current.Get(); err != nil {
+	if err := current.Get(postgres_db.Client); err != nil {
 		return nil, err
 	}
 
@@ -98,11 +98,11 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 
 func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 	p := &procedures.Procedure{ID: procedureID}
-	if err := p.Get(); err != nil {
+	if err := p.Get(postgres_db.Client); err != nil {
 		return nil, err
 	}
 
-	ss, err := steps.Index(procedureID)
+	ss, err := steps.Index(postgres_db.Client, procedureID)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 }
 
 func GetProcedures(limit int, offset int) (*[]procedures.Procedure, error) {
-	ps, err := procedures.Index(limit, offset)
+	ps, err := procedures.Index(postgres_db.Client, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func GetProcedures(limit int, offset int) (*[]procedures.Procedure, error) {
 }
 
 func GetPagination(page int, limit int) (*pagination_utils.Pagination, error) {
-	itemsCount, err := procedures.CountAll()
+	itemsCount, err := procedures.CountAll(postgres_db.Client)
 	if err != nil {
 		return nil, err
 	}
@@ -132,5 +132,5 @@ func GetPagination(page int, limit int) (*pagination_utils.Pagination, error) {
 
 func DeleteProcedure(procedureID uint) error {
 	procedure := &procedures.Procedure{ID: procedureID}
-	return procedure.Delete()
+	return procedure.Delete(postgres_db.Client)
 }
