@@ -1,4 +1,4 @@
-package main
+package migration
 
 import (
 	"database/sql"
@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var migrationFilePath = "file://./migrations/"
+var migrationFilePath = "file://./migrations/sql/"
 
 func main() {
 	fmt.Println("start migration")
@@ -92,7 +92,7 @@ func showUsage() {
 	fmt.Println(`
 -------------------------------------
 Usage:
-  go run migration/main.go <command>
+  go run migrations/migration.go <command>
 Commands:
   new FILENAME  Create new up & down migration files
   up        Apply up migrations
