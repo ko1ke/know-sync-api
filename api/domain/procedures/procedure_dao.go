@@ -11,6 +11,13 @@ func (p *Procedure) Get(db *gorm.DB) error {
 	return nil
 }
 
+func (p *Procedure) GetByUserId(db *gorm.DB) error {
+	if result := db.Where("user_id = ?", p.UserID).First(&p); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func Index(db *gorm.DB, limit int, offset int) (*[]Procedure, error) {
 	var procedures *[]Procedure
 	if result := db.Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
@@ -53,7 +60,7 @@ func (p *Procedure) Save(tx *gorm.DB) error {
 
 func (p *Procedure) Delete(db *gorm.DB) error {
 	// https://gorm.io/ja_JP/docs/error_handling.html
-	if result := db.Delete(&p); result.Error != nil {
+	if result := db.Debug().Delete(&p); result.Error != nil {
 		return result.Error
 	}
 	return nil
