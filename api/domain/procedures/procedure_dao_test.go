@@ -116,7 +116,50 @@ func (suite *ProcedureDaoTestSuite) TestCreate() {
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 	})
 }
+func (suite *ProcedureDaoTestSuite) TestUpdate() {
+	suite.Run("update a procedure", func() {
+		suite.mock.ExpectBegin()
+		suite.mock.ExpectExec(
+			regexp.QuoteMeta(`UPDATE "procedures" SET "created_at"=$1,"updated_at"=$2,"deleted_at"=$3,"title"=$4,"content"=$5,"user_id"=$6 WHERE "id" = $7 AND "procedures"."deleted_at" IS NULL`),
+		).WillReturnResult(sqlmock.NewResult(int64(suite.dummy.ID), 1))
+		suite.mock.ExpectCommit()
 
+		procedure := &Procedure{
+			ID:      suite.dummy.ID,
+			Title:   faker.Word(),
+			Content: faker.Sentence(),
+		}
+		err := procedure.Update(suite.TestDB)
+
+		require.NoError(suite.T(), err)
+		assert.Equal(suite.T(), procedure.ID, suite.dummy.ID, "unexpected ID")
+		assert.NotEqual(suite.T(), procedure.Title, suite.dummy.Title, "unexpected Title")
+		assert.NotEqual(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
+		assert.Empty(suite.T(), procedure.UserID, "unexpected UserID")
+	})
+}
+
+func (suite *ProcedureDaoTestSuite) TestPartialUpdate() {
+	suite.Run("partial update 'content' column of a procedure", func() {
+		suite.mock.ExpectBegin()
+		suite.mock.ExpectExec(
+			regexp.QuoteMeta(`UPDATE "procedures" SET "updated_at"=$1,"content"=$2 WHERE id IN ($3) AND "id" = $4 AND "procedures"."deleted_at" IS NULL`),
+		).WillReturnResult(sqlmock.NewResult(int64(suite.dummy.ID), 1))
+		suite.mock.ExpectCommit()
+
+		procedure := &Procedure{
+			ID:      suite.dummy.ID,
+			Content: faker.Sentence(),
+		}
+		err := procedure.PartialUpdate(suite.TestDB)
+
+		require.NoError(suite.T(), err)
+		assert.Equal(suite.T(), procedure.ID, suite.dummy.ID, "unexpected ID")
+		assert.Empty(suite.T(), procedure.Title, "unexpected Title")
+		assert.NotEqual(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
+		assert.Empty(suite.T(), procedure.UserID, "unexpected UserID")
+	})
+}
 func (suite *ProcedureDaoTestSuite) TestDelete() {
 	suite.Run("delete a procedure", func() {
 		suite.mock.ExpectBegin()
