@@ -55,12 +55,32 @@ func (suite *ProcedureDaoTestSuite) BeforeTest(suiteName string, testName string
 	// spew.Dump(suite.dummy)
 }
 
+func (suite *ProcedureDaoTestSuite) TestGet() {
+	suite.Run("get a procedure", func() {
+		suite.mock.ExpectQuery(
+			regexp.QuoteMeta(`SELECT * FROM "procedures" WHERE id = $1 AND "procedures"."deleted_at" IS NULL AND "procedures"."id" = $2 ORDER BY "procedures"."id" LIMIT 1`),
+		).WithArgs(suite.dummy.ID, suite.dummy.ID).
+			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id"}).
+				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID))
+
+		procedure := &Procedure{
+			ID: suite.dummy.ID,
+		}
+		err := procedure.Get(suite.TestDB)
+		require.NoError(suite.T(), err)
+		assert.Equal(suite.T(), procedure.ID, suite.dummy.ID, "unexpected ID")
+		assert.Equal(suite.T(), procedure.Title, suite.dummy.Title, "unexpected Title")
+		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
+		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
+	})
+}
+
 func (suite *ProcedureDaoTestSuite) TestIndex() {
 	suite.Run("get procedures with no queries", func() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
 				`SELECT * FROM "procedures" WHERE "procedures"."deleted_at" IS NULL LIMIT 10`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "userID"}).
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id"}).
 			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID))
 
 		ps, err := Index(suite.TestDB, 10, 0)
