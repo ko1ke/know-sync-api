@@ -96,3 +96,26 @@ func (suite *ProcedureDaoTestSuite) TestCreate() {
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 	})
 }
+
+func (suite *ProcedureDaoTestSuite) TestDelete() {
+	suite.Run("delete a procedure", func() {
+		suite.mock.ExpectBegin()
+		suite.mock.ExpectExec(
+			`UPDATE "procedures" SET "deleted_at"=(.*)WHERE "procedures"."id" = (.*)"procedures"."deleted_at" IS NULL`).WillReturnResult(sqlmock.NewResult(int64(suite.dummy.ID), 1))
+		suite.mock.ExpectCommit()
+
+		procedure := &Procedure{
+			ID:      suite.dummy.ID,
+			Title:   suite.dummy.Title,
+			Content: suite.dummy.Content,
+			UserID:  suite.dummy.UserID,
+		}
+		err := procedure.Delete(suite.TestDB)
+
+		require.NoError(suite.T(), err)
+		assert.Equal(suite.T(), procedure.ID, suite.dummy.ID, "unexpected ID")
+		assert.Equal(suite.T(), procedure.Title, suite.dummy.Title, "unexpected Title")
+		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
+		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
+	})
+}
