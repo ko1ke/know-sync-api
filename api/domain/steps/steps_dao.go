@@ -26,17 +26,11 @@ func BulkCreate(tx *gorm.DB, steps []Step) ([]Step, error) {
 	return steps, nil
 }
 
-func BulkDeleteByProcedureId(tx *gorm.DB, procedureId uint, ss []Step) error {
-	if result := tx.Where("procedure_id = ?", procedureId).Find(&ss); result.Error != nil {
+func BulkDeleteByProcedureId(tx *gorm.DB, procedureId uint) error {
+	var step Step
+	if result := tx.Where("procedure_id = ?", procedureId).Delete(&step); result.Error != nil {
 		return result.Error
 	}
-
-	if len(ss) > 0 {
-		if result := tx.Delete(&ss); result.Error != nil {
-			return result.Error
-		}
-	}
-
 	return nil
 }
 

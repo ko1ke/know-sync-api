@@ -71,13 +71,9 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 			ss[i].ProcedureID = current.ID
 		}
 
-		delErr := steps.BulkDeleteByProcedureId(tx, procedure.ID, ss)
+		delErr := steps.BulkDeleteByProcedureId(tx, procedure.ID)
 		if delErr != nil {
 			return delErr
-		}
-
-		if ss == nil {
-			return nil
 		}
 
 		newSs, createErr := steps.BulkCreate(tx, ss)
