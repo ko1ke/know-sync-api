@@ -198,3 +198,16 @@ func (suite *StepDaoTestSuite) TestDelete() {
 		assert.Equal(suite.T(), step.ProcedureID, suite.dummy.ProcedureID, "unexpected ProcedureID")
 	})
 }
+func (suite *StepDaoTestSuite) TestBulkDeleteByProcedureID() {
+	suite.Run("delete steps by procedureID", func() {
+		procedureId := uint(1)
+		sqlmock.NewRows([]string{"id", "procedure_id"}).AddRow(1, procedureId).AddRow(2, procedureId)
+		suite.mock.ExpectBegin()
+		suite.mock.ExpectExec(
+			regexp.QuoteMeta(
+				`UPDATE "steps" SET "deleted_at"=$1 WHERE procedure_id = $2 AND "steps"."deleted_at" IS NULL`)).WillReturnResult(sqlmock.NewResult(int64(2), 2))
+		suite.mock.ExpectCommit()
+		err := BulkDeleteByProcedureId(suite.TestDB, procedureId)
+		require.NoError(suite.T(), err)
+	})
+}
