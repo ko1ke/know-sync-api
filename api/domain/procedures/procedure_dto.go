@@ -9,11 +9,11 @@ import (
 
 type Procedure struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time      `json:"-"`
-	UpdatedAt time.Time      `json:"-"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 	Title     string         `json:"title" binding:"required,max=100"`
-	Content   string         `json:"content" binding:"required,max=1000"`
+	Content   string         `json:"content" binding:"max=1000"`
 	UserID    uint           `json:"userId"`
 	Steps     []steps.Step   `json:"steps"`
 }
