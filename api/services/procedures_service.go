@@ -20,11 +20,15 @@ func CreateProcedure(procedure procedures.Procedure) (*procedures.Procedure, err
 			ss[i].ProcedureID = procedure.ID
 		}
 
+		if len(ss) == 0 {
+			procedure.Steps = ss
+			return nil
+		}
+
 		newSs, err := steps.BulkCreate(tx, ss)
 		if err != nil {
 			return err
 		}
-
 		procedure.Steps = newSs
 		return nil
 	})
@@ -74,6 +78,11 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 		delErr := steps.BulkDeleteByProcedureId(tx, procedure.ID)
 		if delErr != nil {
 			return delErr
+		}
+
+		if len(ss) == 0 {
+			current.Steps = ss
+			return nil
 		}
 
 		newSs, createErr := steps.BulkCreate(tx, ss)
