@@ -48,7 +48,6 @@ func (suite *StepDaoTestSuite) BeforeTest(suiteName string, testName string) {
 
 	suite.dummy = Step{
 		ID:          rand_utils.MakeRandomUInt(100),
-		Title:       faker.Word(),
 		Content:     faker.Sentence(),
 		ImgName:     faker.Word() + ".jpeg",
 		ProcedureID: rand_utils.MakeRandomUInt(100),
@@ -61,8 +60,8 @@ func (suite *StepDaoTestSuite) TestGet() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(`SELECT * FROM "steps" WHERE id = $1 AND "steps"."deleted_at" IS NULL AND "steps"."id" = $2 ORDER BY "steps"."id" LIMIT 1`),
 		).WithArgs(suite.dummy.ID, suite.dummy.ID).
-			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "procedure_id", "img_name"}).
-				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.ProcedureID, suite.dummy.ImgName))
+			WillReturnRows(suite.mock.NewRows([]string{"id", "content", "procedure_id", "img_name"}).
+				AddRow(suite.dummy.ID, suite.dummy.Content, suite.dummy.ProcedureID, suite.dummy.ImgName))
 
 		step := &Step{
 			ID: suite.dummy.ID,
@@ -70,7 +69,6 @@ func (suite *StepDaoTestSuite) TestGet() {
 		err := step.Get(suite.TestDB)
 		require.NoError(suite.T(), err)
 		assert.Equal(suite.T(), step.ID, suite.dummy.ID, "unexpected ID")
-		assert.Equal(suite.T(), step.Title, suite.dummy.Title, "unexpected Title")
 		assert.Equal(suite.T(), step.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), step.ImgName, suite.dummy.ImgName, "unexpected ImgName")
 		assert.Equal(suite.T(), step.ProcedureID, suite.dummy.ProcedureID, "unexpected ProcedureID")
@@ -82,8 +80,8 @@ func (suite *StepDaoTestSuite) TestIndex() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
 				`SELECT * FROM "steps" WHERE procedure_id = $1 AND "steps"."deleted_at" IS NULL`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "procedure_id", "img_name"}).
-			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.ProcedureID, suite.dummy.ImgName))
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "content", "procedure_id", "img_name"}).
+			AddRow(suite.dummy.ID, suite.dummy.Content, suite.dummy.ProcedureID, suite.dummy.ImgName))
 
 		ps, err := Index(suite.TestDB, suite.dummy.ProcedureID)
 		require.NoError(suite.T(), err)
@@ -97,12 +95,11 @@ func (suite *StepDaoTestSuite) TestCreate() {
 		suite.mock.ExpectBegin()
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
-				`INSERT INTO "steps" ("created_at","updated_at","deleted_at","title","content","img_name","procedure_id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`),
+				`INSERT INTO "steps" ("created_at","updated_at","deleted_at","content","img_name","procedure_id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`),
 		).WillReturnRows(rows)
 		suite.mock.ExpectCommit()
 
 		step := &Step{
-			Title:       suite.dummy.Title,
 			Content:     suite.dummy.Content,
 			ImgName:     suite.dummy.ImgName,
 			ProcedureID: suite.dummy.ProcedureID,
@@ -111,7 +108,6 @@ func (suite *StepDaoTestSuite) TestCreate() {
 
 		require.NoError(suite.T(), err)
 		assert.Equal(suite.T(), step.ID, suite.dummy.ID, "unexpected ID")
-		assert.Equal(suite.T(), step.Title, suite.dummy.Title, "unexpected Title")
 		assert.Equal(suite.T(), step.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), step.ImgName, suite.dummy.ImgName, "unexpected ImgName")
 		assert.Equal(suite.T(), step.ProcedureID, suite.dummy.ProcedureID, "unexpected ProcedureID")
@@ -124,18 +120,16 @@ func (suite *StepDaoTestSuite) TestBulkCreate() {
 		rows := sqlmock.NewRows([]string{"id"}).AddRow(suite.dummy.ID).AddRow(rand_utils.MakeRandomUInt(100))
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
-				`INSERT INTO "steps" ("created_at","updated_at","deleted_at","title","content","img_name","procedure_id") VALUES ($1,$2,$3,$4,$5,$6,$7),($8,$9,$10,$11,$12,$13,$14) ON CONFLICT ("id") DO UPDATE SET "updated_at"=$15,"deleted_at"="excluded"."deleted_at","title"="excluded"."title","content"="excluded"."content","img_name"="excluded"."img_name","procedure_id"="excluded"."procedure_id" RETURNING "id"`),
+				`INSERT INTO "steps" ("created_at","updated_at","deleted_at","content","img_name","procedure_id") VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "updated_at"=$13,"deleted_at"="excluded"."deleted_at","content"="excluded"."content","img_name"="excluded"."img_name","procedure_id"="excluded"."procedure_id" RETURNING "id"`),
 		).WillReturnRows(rows)
 		suite.mock.ExpectCommit()
 
 		step1 := Step{
-			Title:       suite.dummy.Title,
 			Content:     suite.dummy.Content,
 			ImgName:     suite.dummy.ImgName,
 			ProcedureID: suite.dummy.ProcedureID,
 		}
 		step2 := Step{
-			Title:       faker.Word(),
 			Content:     faker.Sentence(),
 			ImgName:     faker.Word() + ".jpeg",
 			ProcedureID: suite.dummy.ProcedureID,
@@ -154,20 +148,18 @@ func (suite *StepDaoTestSuite) TestUpdate() {
 	suite.Run("update a step", func() {
 		suite.mock.ExpectBegin()
 		suite.mock.ExpectExec(
-			regexp.QuoteMeta(`UPDATE "steps" SET "created_at"=$1,"updated_at"=$2,"deleted_at"=$3,"title"=$4,"content"=$5,"img_name"=$6,"procedure_id"=$7 WHERE "id" = $8 AND "steps"."deleted_at" IS NULL`),
+			regexp.QuoteMeta(`UPDATE "steps" SET "created_at"=$1,"updated_at"=$2,"deleted_at"=$3,"content"=$4,"img_name"=$5,"procedure_id"=$6 WHERE "id" = $7 AND "steps"."deleted_at" IS NULL`),
 		).WillReturnResult(sqlmock.NewResult(int64(suite.dummy.ID), 1))
 		suite.mock.ExpectCommit()
 
 		step := &Step{
 			ID:      suite.dummy.ID,
-			Title:   faker.Word(),
 			Content: faker.Sentence(),
 		}
 		err := step.Update(suite.TestDB)
 
 		require.NoError(suite.T(), err)
 		assert.Equal(suite.T(), step.ID, suite.dummy.ID, "unexpected ID")
-		assert.NotEqual(suite.T(), step.Title, suite.dummy.Title, "unexpected Title")
 		assert.NotEqual(suite.T(), step.Content, suite.dummy.Content, "unexpected Content")
 		assert.Empty(suite.T(), step.ImgName, "unexpected ImgName")
 		assert.Empty(suite.T(), step.ProcedureID, "unexpected ProcedureID")
@@ -183,7 +175,6 @@ func (suite *StepDaoTestSuite) TestDelete() {
 
 		step := &Step{
 			ID:          suite.dummy.ID,
-			Title:       suite.dummy.Title,
 			Content:     suite.dummy.Content,
 			ImgName:     suite.dummy.ImgName,
 			ProcedureID: suite.dummy.ProcedureID,
@@ -192,7 +183,6 @@ func (suite *StepDaoTestSuite) TestDelete() {
 
 		require.NoError(suite.T(), err)
 		assert.Equal(suite.T(), step.ID, suite.dummy.ID, "unexpected ID")
-		assert.Equal(suite.T(), step.Title, suite.dummy.Title, "unexpected Title")
 		assert.Equal(suite.T(), step.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), step.ImgName, suite.dummy.ImgName, "unexpected ImgName")
 		assert.Equal(suite.T(), step.ProcedureID, suite.dummy.ProcedureID, "unexpected ProcedureID")

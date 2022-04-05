@@ -21,7 +21,7 @@ func All() []Seed {
 		{
 			Name: "CreateStep",
 			Run: func(db *gorm.DB) error {
-				return CreateStep(db, "Seed step title", "Seed step content")
+				return CreateStep(db, "Seed step content")
 			},
 		},
 	}

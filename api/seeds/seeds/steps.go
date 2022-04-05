@@ -8,12 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateStep(db *gorm.DB, title string, content string) error {
+func CreateStep(db *gorm.DB, content string) error {
 	seedUser := users.User{Email: SeedUserEmail}
 	seedUser.GetByEmail(db)
 
 	seedProcedure := procedures.Procedure{UserID: seedUser.ID}
 	seedProcedure.GetByUserId(db)
 
-	return db.Create(&steps.Step{Title: title, Content: content, ProcedureID: seedProcedure.ID}).Error
+	return db.Create(&steps.Step{Content: content, ProcedureID: seedProcedure.ID}).Error
 }
