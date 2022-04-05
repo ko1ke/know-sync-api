@@ -15,5 +15,6 @@ type Procedure struct {
 	Title     string         `json:"title" binding:"required,max=100"`
 	Content   string         `json:"content" binding:"max=1000"`
 	UserID    uint           `json:"userId"`
+	Publish   bool           `json:"publish"`
 	Steps     []steps.Step   `json:"steps"`
 }
