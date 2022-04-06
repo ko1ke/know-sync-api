@@ -1,7 +1,7 @@
 package procedures
 
 import (
-	// "know-sync-api/controllers/users"
+	"know-sync-api/controllers/users"
 
 	"know-sync-api/domain/procedures"
 	"know-sync-api/services"
@@ -22,13 +22,13 @@ func GetProcedure(c *gin.Context) {
 
 	procedure, getErr := services.GetProcedure(uint(procedureID))
 
-	// isOwn, ownErr := isOwnProcedure(c.Request, procedure)
+	isOwn, ownErr := isOwnProcedure(c.Request, procedure)
 
-	// if !isOwn {
-	// 	logrus.Error(ownErr)
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
-	// 	return
-	// }
+	if !isOwn {
+		logrus.Error(ownErr)
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		return
+	}
 
 	if getErr != nil {
 		logrus.Error(getErr)
@@ -50,7 +50,14 @@ func GetProcedures(c *gin.Context) {
 	var limit int = 10
 	var offset int = limit * (page - 1)
 
-	procedures, getErr := services.GetProcedures(limit, offset)
+	user, err := users.GetUserFromToken(c.Request)
+	if err != nil {
+		logrus.Error(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	procedures, getErr := services.GetProcedures(limit, offset, user.ID)
 	if getErr != nil {
 		logrus.Error(getErr)
 		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
@@ -70,14 +77,14 @@ func CreateProcedure(c *gin.Context) {
 		return
 	}
 
-	// user, err := users.GetUserFromToken(c.Request)
-	// if err != nil {
-	// 	logrus.Error(err)
-	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	user, err := users.GetUserFromToken(c.Request)
+	if err != nil {
+		logrus.Error(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 
-	// procedure.UserID = user.ID
+	procedure.UserID = user.ID
 	newProcedure, saveErr := services.CreateProcedure(procedure)
 	if saveErr != nil {
 		logrus.Error(saveErr)
@@ -96,20 +103,20 @@ func UpdateProcedure(c *gin.Context) {
 		return
 	}
 
-	// currentProcedure, getErr := services.GetProcedure(uint(procedureID))
+	currentProcedure, getErr := services.GetProcedure(uint(procedureID))
 
-	// if getErr != nil {
-	// 	logrus.Error(getErr)
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
-	// 	return
-	// }
+	if getErr != nil {
+		logrus.Error(getErr)
+		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		return
+	}
 
-	// isOwn, ownErr := isOwnProcedure(c.Request, currentProcedure)
-	// if !isOwn {
-	// 	logrus.Error(ownErr)
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
-	// 	return
-	// }
+	isOwn, ownErr := isOwnProcedure(c.Request, currentProcedure)
+	if !isOwn {
+		logrus.Error(ownErr)
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		return
+	}
 
 	var procedure procedures.Procedure
 	if err := c.ShouldBindJSON(&procedure); err != nil {
@@ -166,12 +173,12 @@ func DeleteProcedure(c *gin.Context) {
 		return
 	}
 
-	// isOwn, ownErr := isOwnProcedure(c.Request, procedure)
-	// if !isOwn {
-	// 	logrus.Error(ownErr)
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
-	// 	return
-	// }
+	isOwn, ownErr := isOwnProcedure(c.Request, procedure)
+	if !isOwn {
+		logrus.Error(ownErr)
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		return
+	}
 
 	if err := services.DeleteProcedure(procedureID); err != nil {
 		logrus.Error(err)
@@ -181,13 +188,13 @@ func DeleteProcedure(c *gin.Context) {
 	c.JSON(http.StatusOK, procedure)
 }
 
-// func isOwnProcedure(r *http.Request, procedure *procedures.Procedure) (bool, error) {
-// 	user, err := users.GetUserFromToken(r)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if procedure.UserId != user.ID {
-// 		return false, nil
-// 	}
-// 	return true, nil
-// }
+func isOwnProcedure(r *http.Request, procedure *procedures.Procedure) (bool, error) {
+	user, err := users.GetUserFromToken(r)
+	if err != nil {
+		return false, err
+	}
+	if procedure.UserID != user.ID {
+		return false, nil
+	}
+	return true, nil
+}

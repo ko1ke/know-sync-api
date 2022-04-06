@@ -18,9 +18,9 @@ func (p *Procedure) GetByUserId(db *gorm.DB) error {
 	return nil
 }
 
-func Index(db *gorm.DB, limit int, offset int) (*[]Procedure, error) {
+func Index(db *gorm.DB, limit int, offset int, userID uint) (*[]Procedure, error) {
 	var procedures *[]Procedure
-	if result := db.Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+	if result := db.Where("user_id = ?", userID).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
 		return nil, result.Error
 	}
 	return procedures, nil
