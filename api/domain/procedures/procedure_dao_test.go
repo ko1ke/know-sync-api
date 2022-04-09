@@ -91,6 +91,20 @@ func (suite *ProcedureDaoTestSuite) TestIndex() {
 	})
 }
 
+func (suite *ProcedureDaoTestSuite) TestPublicIndex() {
+	suite.Run("get procedures with no queries", func() {
+		suite.mock.ExpectQuery(
+			regexp.QuoteMeta(
+				`SELECT * FROM "procedures" WHERE publish = $1 AND "procedures"."deleted_at" IS NULL LIMIT 10`),
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "publish"}).
+			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, suite.dummy.Publish))
+
+		ps, err := PublicIndex(suite.TestDB, 10, 0)
+		require.NoError(suite.T(), err)
+		assert.NotNil(suite.T(), ps)
+	})
+}
+
 func (suite *ProcedureDaoTestSuite) TestCreate() {
 	suite.Run("create a procedure", func() {
 		rows := sqlmock.NewRows([]string{"id"}).AddRow(suite.dummy.ID)

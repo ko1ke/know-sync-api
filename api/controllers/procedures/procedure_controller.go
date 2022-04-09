@@ -1,6 +1,7 @@
 package procedures
 
 import (
+	"fmt"
 	"know-sync-api/controllers/users"
 
 	"know-sync-api/domain/procedures"
@@ -39,6 +40,31 @@ func GetProcedure(c *gin.Context) {
 	c.JSON(http.StatusOK, procedure)
 }
 
+func GetPublicProcedure(c *gin.Context) {
+	procedureID, idErr := getProcedureID(c.Param("procedure_id"))
+	if idErr != nil {
+		logrus.Error(idErr)
+		c.JSON(http.StatusBadRequest, gin.H{"error": idErr.Error()})
+		return
+	}
+
+	procedure, getErr := services.GetProcedure(uint(procedureID))
+
+	if !procedure.Publish {
+		logrus.Errorf("procedure %v is not public", procedure.ID)
+		c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("procedure %v is not public", procedure.ID)})
+		return
+	}
+
+	if getErr != nil {
+		logrus.Error(getErr)
+		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, procedure)
+}
+
 func GetProcedures(c *gin.Context) {
 	page, pageErr := getPage(c.Query("page"))
 	if pageErr != nil {
@@ -58,6 +84,29 @@ func GetProcedures(c *gin.Context) {
 	}
 
 	procedures, getErr := services.GetProcedures(limit, offset, user.ID)
+	if getErr != nil {
+		logrus.Error(getErr)
+		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		return
+	}
+
+	pagination, _ := services.GetPagination(page, limit)
+
+	c.JSON(http.StatusOK, gin.H{"procedures": procedures, "pagination": pagination})
+}
+
+func GetPublicProcedures(c *gin.Context) {
+	page, pageErr := getPage(c.Query("page"))
+	if pageErr != nil {
+		logrus.Error(pageErr)
+		c.JSON(http.StatusBadRequest, gin.H{"error": pageErr.Error()})
+		return
+	}
+
+	var limit int = 10
+	var offset int = limit * (page - 1)
+
+	procedures, getErr := services.GetPublicProcedures(limit, offset)
 	if getErr != nil {
 		logrus.Error(getErr)
 		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})

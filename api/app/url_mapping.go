@@ -19,4 +19,6 @@ func mapUrls() {
 	router.PUT("/procedures/:procedure_id", middlewares.TokenAuthMiddleware(), procedures.UpdateProcedure)
 	router.PATCH("/procedures/:procedure_id", middlewares.TokenAuthMiddleware(), procedures.UpdateProcedure)
 	router.DELETE("/procedures/:procedure_id", middlewares.TokenAuthMiddleware(), procedures.DeleteProcedure)
+	router.GET("/public_procedures", procedures.GetPublicProcedures)
+	router.GET("/public_procedures/:procedure_id", procedures.GetPublicProcedure)
 }

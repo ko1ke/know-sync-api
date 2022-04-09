@@ -26,6 +26,14 @@ func Index(db *gorm.DB, limit int, offset int, userID uint) (*[]Procedure, error
 	return procedures, nil
 }
 
+func PublicIndex(db *gorm.DB, limit int, offset int) (*[]Procedure, error) {
+	var procedures *[]Procedure
+	if result := db.Where("publish = ?", true).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+		return nil, result.Error
+	}
+	return procedures, nil
+}
+
 func CountAll(db *gorm.DB) (int64, error) {
 	var count int64
 	if result := db.Table("procedures").Count(&count); result.Error != nil {

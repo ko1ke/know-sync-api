@@ -129,6 +129,14 @@ func GetProcedures(limit int, offset int, userID uint) (*[]procedures.Procedure,
 	return ps, nil
 }
 
+func GetPublicProcedures(limit int, offset int) (*[]procedures.Procedure, error) {
+	ps, err := procedures.PublicIndex(postgres_db.Client, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	return ps, nil
+}
+
 func GetPagination(page int, limit int) (*pagination_utils.Pagination, error) {
 	itemsCount, err := procedures.CountAll(postgres_db.Client)
 	if err != nil {
