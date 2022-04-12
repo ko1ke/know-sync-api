@@ -83,14 +83,14 @@ func GetProcedures(c *gin.Context) {
 		return
 	}
 
-	procedures, getErr := services.GetProcedures(limit, offset, user.ID)
+	procedures, getErr := services.GetProcedures(limit, offset, c.Query("keyword"), user.ID)
 	if getErr != nil {
 		logrus.Error(getErr)
 		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
 		return
 	}
 
-	pagination, _ := services.GetPagination(page, limit)
+	pagination, _ := services.GetPagination(page, limit, len(*procedures))
 
 	c.JSON(http.StatusOK, gin.H{"procedures": procedures, "pagination": pagination})
 }
@@ -106,14 +106,14 @@ func GetPublicProcedures(c *gin.Context) {
 	var limit int = 10
 	var offset int = limit * (page - 1)
 
-	procedures, getErr := services.GetPublicProcedures(limit, offset)
+	procedures, getErr := services.GetPublicProcedures(limit, offset, c.Query("keyword"))
 	if getErr != nil {
 		logrus.Error(getErr)
 		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
 		return
 	}
 
-	pagination, _ := services.GetPagination(page, limit)
+	pagination, _ := services.GetPagination(page, limit, len(*procedures))
 
 	c.JSON(http.StatusOK, gin.H{"procedures": procedures, "pagination": pagination})
 }

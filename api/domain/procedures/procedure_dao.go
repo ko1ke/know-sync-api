@@ -18,17 +18,17 @@ func (p *Procedure) GetByUserId(db *gorm.DB) error {
 	return nil
 }
 
-func Index(db *gorm.DB, limit int, offset int, userID uint) (*[]Procedure, error) {
+func Index(db *gorm.DB, limit int, offset int, keyword string, userID uint) (*[]Procedure, error) {
 	var procedures *[]Procedure
-	if result := db.Where("user_id = ?", userID).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+	if result := db.Order("updated_at DESC").Where("title LIKE ? AND user_id = ?", "%"+keyword+"%", userID).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
 		return nil, result.Error
 	}
 	return procedures, nil
 }
 
-func PublicIndex(db *gorm.DB, limit int, offset int) (*[]Procedure, error) {
+func PublicIndex(db *gorm.DB, limit int, offset int, keyword string) (*[]Procedure, error) {
 	var procedures *[]Procedure
-	if result := db.Where("publish = ?", true).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+	if result := db.Order("updated_at DESC").Where("title LIKE ? AND publish = ?", "%"+keyword+"%", true).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
 		return nil, result.Error
 	}
 	return procedures, nil

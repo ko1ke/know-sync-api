@@ -121,29 +121,29 @@ func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 	return p, nil
 }
 
-func GetProcedures(limit int, offset int, userID uint) (*[]procedures.Procedure, error) {
-	ps, err := procedures.Index(postgres_db.Client, limit, offset, userID)
+func GetProcedures(limit int, offset int, keyword string, userID uint) (*[]procedures.Procedure, error) {
+	ps, err := procedures.Index(postgres_db.Client, limit, offset, keyword, userID)
 	if err != nil {
 		return nil, err
 	}
 	return ps, nil
 }
 
-func GetPublicProcedures(limit int, offset int) (*[]procedures.Procedure, error) {
-	ps, err := procedures.PublicIndex(postgres_db.Client, limit, offset)
+func GetPublicProcedures(limit int, offset int, keyword string) (*[]procedures.Procedure, error) {
+	ps, err := procedures.PublicIndex(postgres_db.Client, limit, offset, keyword)
 	if err != nil {
 		return nil, err
 	}
 	return ps, nil
 }
 
-func GetPagination(page int, limit int) (*pagination_utils.Pagination, error) {
-	itemsCount, err := procedures.CountAll(postgres_db.Client)
+func GetPagination(page int, limit int, pLen int) (*pagination_utils.Pagination, error) {
+	pCountAll, err := procedures.CountAll(postgres_db.Client)
 	if err != nil {
 		return nil, err
 	}
 
-	pagination := pagination_utils.NewPagination(page, limit, int(itemsCount))
+	pagination := pagination_utils.NewPagination(page, limit, pLen, int(pCountAll))
 	return pagination, nil
 }
 

@@ -2,13 +2,14 @@ package pagination_utils
 
 type Pagination struct {
 	ItemsCount  int  `json:"itemsCount"`
+	CountAll    int  `json:"countAll"`
 	CurrentPage int  `json:"currentPage"`
 	TotalPages  int  `json:"totalPages"`
 	IsFirst     bool `json:"isFirst"`
 	IsLast      bool `json:"isLast"`
 }
 
-func NewPagination(page, limit, itemsCount int) *Pagination {
+func NewPagination(page, limit, itemsCount, countAll int) *Pagination {
 	totalPages := (itemsCount)/limit + 1
 	var isFirst bool
 	var isLast bool
@@ -26,6 +27,7 @@ func NewPagination(page, limit, itemsCount int) *Pagination {
 
 	return &Pagination{
 		ItemsCount:  itemsCount,
+		CountAll:    countAll,
 		CurrentPage: page,
 		TotalPages:  totalPages,
 		IsFirst:     isFirst,
