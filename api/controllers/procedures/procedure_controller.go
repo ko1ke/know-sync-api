@@ -21,9 +21,9 @@ func GetProcedure(c *gin.Context) {
 		return
 	}
 
-	procedure, getErr := services.GetProcedure(uint(procedureID))
+	procedure, getErr := services.GetProcedureItem(uint(procedureID))
 
-	isOwn, ownErr := isOwnProcedure(c.Request, procedure)
+	isOwn, ownErr := isOwnProcedure(c.Request, &procedure.Procedure)
 
 	if !isOwn {
 		logrus.Error(ownErr)
@@ -48,7 +48,7 @@ func GetPublicProcedure(c *gin.Context) {
 		return
 	}
 
-	procedure, getErr := services.GetProcedure(uint(procedureID))
+	procedure, getErr := services.GetProcedureItem(uint(procedureID))
 
 	if !procedure.Publish {
 		logrus.Errorf("procedure %v is not public", procedure.ID)

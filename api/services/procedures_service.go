@@ -121,6 +121,14 @@ func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 	return p, nil
 }
 
+func GetProcedureItem(procedureID uint) (*procedures.ProcedureItem, error) {
+	ps, err := procedures.GetItem(postgres_db.Client, procedureID)
+	if err != nil {
+		return nil, err
+	}
+	return ps, nil
+}
+
 func GetProcedures(limit int, offset int, keyword string, userID uint) (*[]procedures.ProcedureItem, error) {
 	ps, err := procedures.Index(postgres_db.Client, limit, offset, keyword, userID)
 	if err != nil {

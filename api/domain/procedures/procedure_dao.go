@@ -11,6 +11,18 @@ func (p *Procedure) Get(db *gorm.DB) error {
 	return nil
 }
 
+func GetItem(db *gorm.DB, pID uint) (*ProcedureItem, error) {
+	var procedureItem *ProcedureItem
+
+	if result := db.Table("procedures").
+		Select("procedures.*, users.username").
+		Joins("inner join users ON users.id=procedures.user_id").
+		Where("procedures.id = ?", pID).First(&procedureItem); result.Error != nil {
+		return nil, result.Error
+	}
+	return procedureItem, nil
+}
+
 func (p *Procedure) GetByUserId(db *gorm.DB) error {
 	if result := db.Where("user_id = ?", p.UserID).First(&p); result.Error != nil {
 		return result.Error

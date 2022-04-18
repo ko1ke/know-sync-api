@@ -16,9 +16,10 @@ import (
 
 type ProcedureDaoTestSuite struct {
 	suite.Suite
-	TestDB *gorm.DB
-	mock   sqlmock.Sqlmock
-	dummy  Procedure
+	TestDB     *gorm.DB
+	mock       sqlmock.Sqlmock
+	dummy      Procedure
+	dummyPItem ProcedureItem
 }
 
 // set up test to gorm send queries to mock
@@ -53,6 +54,11 @@ func (suite *ProcedureDaoTestSuite) BeforeTest(suiteName string, testName string
 		Publish: true,
 		UserID:  rand_utils.MakeRandomUInt(100),
 	}
+	suite.dummyPItem = ProcedureItem{
+		Procedure: suite.dummy,
+		Username:  faker.Username(),
+	}
+
 	// spew.Dump(suite.dummy)
 }
 
@@ -74,6 +80,27 @@ func (suite *ProcedureDaoTestSuite) TestGet() {
 		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 		assert.Equal(suite.T(), procedure.Publish, suite.dummy.Publish, "unexpected Publish")
+	})
+}
+
+func (suite *ProcedureDaoTestSuite) TestGetItem() {
+	suite.Run("get a procedure item", func() {
+		suite.mock.ExpectQuery(
+			regexp.QuoteMeta(`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE procedures.id = $1 AND "procedures"."deleted_at" IS NULL ORDER BY "procedures"."id" LIMIT 1`),
+		).WithArgs(suite.dummy.ID).
+			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
+				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, "", suite.dummy.Publish))
+
+		p, err := GetItem(suite.TestDB, suite.dummy.ID)
+
+		require.NoError(suite.T(), err)
+		assert.Equal(suite.T(), p.ID, suite.dummy.ID, "unexpected ID")
+		assert.Equal(suite.T(), p.Title, suite.dummy.Title, "unexpected Title")
+		assert.Equal(suite.T(), p.Content, suite.dummy.Content, "unexpected Content")
+		assert.Equal(suite.T(), p.UserID, suite.dummy.UserID, "unexpected UserID")
+		// TODO: research about how to mock parent table
+		assert.Equal(suite.T(), p.Username, "", "unexpected Username")
+		assert.Equal(suite.T(), p.Publish, suite.dummy.Publish, "unexpected Publish")
 	})
 }
 
