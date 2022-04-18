@@ -18,3 +18,8 @@ type Procedure struct {
 	Publish   bool           `json:"publish"`
 	Steps     []steps.Step   `json:"steps"`
 }
+
+type ProcedureItem struct {
+	Procedure
+	Username string `json:"username"`
+}

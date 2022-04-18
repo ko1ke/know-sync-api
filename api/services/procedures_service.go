@@ -121,7 +121,7 @@ func GetProcedure(procedureID uint) (*procedures.Procedure, error) {
 	return p, nil
 }
 
-func GetProcedures(limit int, offset int, keyword string, userID uint) (*[]procedures.Procedure, error) {
+func GetProcedures(limit int, offset int, keyword string, userID uint) (*[]procedures.ProcedureItem, error) {
 	ps, err := procedures.Index(postgres_db.Client, limit, offset, keyword, userID)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func GetProcedures(limit int, offset int, keyword string, userID uint) (*[]proce
 	return ps, nil
 }
 
-func GetPublicProcedures(limit int, offset int, keyword string) (*[]procedures.Procedure, error) {
+func GetPublicProcedures(limit int, offset int, keyword string) (*[]procedures.ProcedureItem, error) {
 	ps, err := procedures.PublicIndex(postgres_db.Client, limit, offset, keyword)
 	if err != nil {
 		return nil, err

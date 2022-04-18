@@ -18,20 +18,28 @@ func (p *Procedure) GetByUserId(db *gorm.DB) error {
 	return nil
 }
 
-func Index(db *gorm.DB, limit int, offset int, keyword string, userID uint) (*[]Procedure, error) {
-	var procedures *[]Procedure
-	if result := db.Order("updated_at DESC").Where("title LIKE ? AND user_id = ?", "%"+keyword+"%", userID).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+func Index(db *gorm.DB, limit int, offset int, keyword string, userID uint) (*[]ProcedureItem, error) {
+	var procedureIndex *[]ProcedureItem
+	if result := db.Table("procedures").Order("updated_at DESC").
+		Select("procedures.*, users.username").
+		Joins("inner join users ON users.id=procedures.user_id").
+		Where("title LIKE ? AND user_id = ?", "%"+keyword+"%", userID).
+		Limit(limit).Offset(offset).Find(&procedureIndex); result.Error != nil {
 		return nil, result.Error
 	}
-	return procedures, nil
+	return procedureIndex, nil
 }
 
-func PublicIndex(db *gorm.DB, limit int, offset int, keyword string) (*[]Procedure, error) {
-	var procedures *[]Procedure
-	if result := db.Order("updated_at DESC").Where("title LIKE ? AND publish = ?", "%"+keyword+"%", true).Limit(limit).Offset(offset).Find(&procedures); result.Error != nil {
+func PublicIndex(db *gorm.DB, limit int, offset int, keyword string) (*[]ProcedureItem, error) {
+	var procedureIndex *[]ProcedureItem
+	if result := db.Table("procedures").Order("updated_at DESC").
+		Select("procedures.*, users.username").
+		Joins("inner join users ON users.id=procedures.user_id").
+		Where("title LIKE ? AND publish = ?", "%"+keyword+"%", true).
+		Limit(limit).Offset(offset).Find(&procedureIndex); result.Error != nil {
 		return nil, result.Error
 	}
-	return procedures, nil
+	return procedureIndex, nil
 }
 
 func CountAll(db *gorm.DB) (int64, error) {

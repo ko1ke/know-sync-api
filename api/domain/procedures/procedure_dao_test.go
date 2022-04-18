@@ -81,9 +81,9 @@ func (suite *ProcedureDaoTestSuite) TestIndex() {
 	suite.Run("get procedures with no queries", func() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
-				`SELECT * FROM "procedures" WHERE (title LIKE $1 AND user_id = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "publish"}).
-			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, suite.dummy.Publish))
+				`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE (title LIKE $1 AND user_id = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
+			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish))
 
 		ps, err := Index(suite.TestDB, 10, 0, "", suite.dummy.UserID)
 		require.NoError(suite.T(), err)
@@ -95,9 +95,9 @@ func (suite *ProcedureDaoTestSuite) TestPublicIndex() {
 	suite.Run("get procedures with no queries", func() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
-				`SELECT * FROM "procedures" WHERE (title LIKE $1 AND publish = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "publish"}).
-			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, suite.dummy.Publish))
+				`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE (title LIKE $1 AND publish = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
+			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish))
 
 		ps, err := PublicIndex(suite.TestDB, 10, 0, "")
 		require.NoError(suite.T(), err)
