@@ -61,7 +61,9 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 			if procedure.Publish || !procedure.Publish {
 				current.Publish = procedure.Publish
 			}
-
+			if procedure.EyeCatchImgName != "" {
+				current.EyeCatchImgName = procedure.EyeCatchImgName
+			}
 			if err := current.PartialUpdate(tx); err != nil {
 				return err
 			}
@@ -69,6 +71,7 @@ func UpdateProcedure(isPartial bool, procedure procedures.Procedure) (*procedure
 			current.Title = procedure.Title
 			current.Content = procedure.Content
 			current.Publish = procedure.Publish
+			current.EyeCatchImgName = procedure.EyeCatchImgName
 			if err := current.Update(tx); err != nil {
 				return err
 			}

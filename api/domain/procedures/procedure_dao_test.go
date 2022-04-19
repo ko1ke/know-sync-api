@@ -48,17 +48,13 @@ func TestProcedureDaoTestSuite(t *testing.T) {
 func (suite *ProcedureDaoTestSuite) BeforeTest(suiteName string, testName string) {
 
 	suite.dummy = Procedure{
-		ID:      rand_utils.MakeRandomUInt(100),
-		Title:   faker.Word(),
-		Content: faker.Sentence(),
-		Publish: true,
-		UserID:  rand_utils.MakeRandomUInt(100),
+		ID:              rand_utils.MakeRandomUInt(100),
+		Title:           faker.Word(),
+		Content:         faker.Sentence(),
+		Publish:         true,
+		UserID:          rand_utils.MakeRandomUInt(100),
+		EyeCatchImgName: faker.Word() + ".jpeg",
 	}
-	suite.dummyPItem = ProcedureItem{
-		Procedure: suite.dummy,
-		Username:  faker.Username(),
-	}
-
 	// spew.Dump(suite.dummy)
 }
 
@@ -67,8 +63,8 @@ func (suite *ProcedureDaoTestSuite) TestGet() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(`SELECT * FROM "procedures" WHERE id = $1 AND "procedures"."deleted_at" IS NULL AND "procedures"."id" = $2 ORDER BY "procedures"."id" LIMIT 1`),
 		).WithArgs(suite.dummy.ID, suite.dummy.ID).
-			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "publish"}).
-				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, suite.dummy.Publish))
+			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "publish", "eye_catch_img_name"}).
+				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, suite.dummy.Publish, suite.dummy.EyeCatchImgName))
 
 		procedure := &Procedure{
 			ID: suite.dummy.ID,
@@ -80,6 +76,7 @@ func (suite *ProcedureDaoTestSuite) TestGet() {
 		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 		assert.Equal(suite.T(), procedure.Publish, suite.dummy.Publish, "unexpected Publish")
+		assert.Equal(suite.T(), procedure.EyeCatchImgName, suite.dummy.EyeCatchImgName, "unexpected EyeCatchImgName")
 	})
 }
 
@@ -88,8 +85,8 @@ func (suite *ProcedureDaoTestSuite) TestGetItem() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE procedures.id = $1 AND "procedures"."deleted_at" IS NULL ORDER BY "procedures"."id" LIMIT 1`),
 		).WithArgs(suite.dummy.ID).
-			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
-				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, "", suite.dummy.Publish))
+			WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish", "eye_catch_img_name"}).
+				AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, "", suite.dummy.Publish, suite.dummy.EyeCatchImgName))
 
 		p, err := GetItem(suite.TestDB, suite.dummy.ID)
 
@@ -101,6 +98,7 @@ func (suite *ProcedureDaoTestSuite) TestGetItem() {
 		// TODO: research about how to mock parent table
 		assert.Equal(suite.T(), p.Username, "", "unexpected Username")
 		assert.Equal(suite.T(), p.Publish, suite.dummy.Publish, "unexpected Publish")
+		assert.Equal(suite.T(), p.EyeCatchImgName, suite.dummy.EyeCatchImgName, "unexpected EyeCatchImgName")
 	})
 }
 
@@ -109,8 +107,8 @@ func (suite *ProcedureDaoTestSuite) TestIndex() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
 				`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE (title LIKE $1 AND user_id = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
-			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish))
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish", "eye_catch_img_name"}).
+			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish, suite.dummy.EyeCatchImgName))
 
 		ps, err := Index(suite.TestDB, 10, 0, "", suite.dummy.UserID)
 		require.NoError(suite.T(), err)
@@ -123,8 +121,8 @@ func (suite *ProcedureDaoTestSuite) TestPublicIndex() {
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
 				`SELECT procedures.*, users.username FROM "procedures" inner join users ON users.id=procedures.user_id WHERE (title LIKE $1 AND publish = $2) AND "procedures"."deleted_at" IS NULL ORDER BY updated_at DESC LIMIT 10`),
-		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish"}).
-			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish))
+		).WillReturnRows(suite.mock.NewRows([]string{"id", "title", "content", "user_id", "users.username", "publish", "eye_catch_img_name"}).
+			AddRow(suite.dummy.ID, suite.dummy.Title, suite.dummy.Content, suite.dummy.UserID, faker.Username(), suite.dummy.Publish, suite.dummy.EyeCatchImgName))
 
 		ps, err := PublicIndex(suite.TestDB, 10, 0, "")
 		require.NoError(suite.T(), err)
@@ -138,15 +136,16 @@ func (suite *ProcedureDaoTestSuite) TestCreate() {
 		suite.mock.ExpectBegin()
 		suite.mock.ExpectQuery(
 			regexp.QuoteMeta(
-				`INSERT INTO "procedures" ("created_at","updated_at","deleted_at","title","content","user_id","publish") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`),
+				`INSERT INTO "procedures" ("created_at","updated_at","deleted_at","title","content","user_id","publish","eye_catch_img_name") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`),
 		).WillReturnRows(rows)
 		suite.mock.ExpectCommit()
 
 		procedure := &Procedure{
-			Title:   suite.dummy.Title,
-			Content: suite.dummy.Content,
-			UserID:  suite.dummy.UserID,
-			Publish: suite.dummy.Publish,
+			Title:           suite.dummy.Title,
+			Content:         suite.dummy.Content,
+			UserID:          suite.dummy.UserID,
+			Publish:         suite.dummy.Publish,
+			EyeCatchImgName: suite.dummy.EyeCatchImgName,
 		}
 		err := procedure.Save(suite.TestDB)
 
@@ -156,21 +155,23 @@ func (suite *ProcedureDaoTestSuite) TestCreate() {
 		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 		assert.Equal(suite.T(), procedure.Publish, suite.dummy.Publish, "unexpected Publish")
+		assert.Equal(suite.T(), procedure.EyeCatchImgName, suite.dummy.EyeCatchImgName, "unexpected EyeCatchImgName")
 	})
 }
 func (suite *ProcedureDaoTestSuite) TestUpdate() {
 	suite.Run("update a procedure", func() {
 		suite.mock.ExpectBegin()
 		suite.mock.ExpectExec(
-			regexp.QuoteMeta(`UPDATE "procedures" SET "created_at"=$1,"updated_at"=$2,"deleted_at"=$3,"title"=$4,"content"=$5,"user_id"=$6,"publish"=$7 WHERE "id" = $8 AND "procedures"."deleted_at" IS NULL`),
+			regexp.QuoteMeta(`UPDATE "procedures" SET "created_at"=$1,"updated_at"=$2,"deleted_at"=$3,"title"=$4,"content"=$5,"user_id"=$6,"publish"=$7,"eye_catch_img_name"=$8 WHERE "id" = $9 AND "procedures"."deleted_at" IS NULL`),
 		).WillReturnResult(sqlmock.NewResult(int64(suite.dummy.ID), 1))
 		suite.mock.ExpectCommit()
 
 		procedure := &Procedure{
-			ID:      suite.dummy.ID,
-			Title:   faker.Word(),
-			Content: faker.Sentence(),
-			Publish: suite.dummy.Publish,
+			ID:              suite.dummy.ID,
+			Title:           faker.Word(),
+			Content:         faker.Sentence(),
+			Publish:         suite.dummy.Publish,
+			EyeCatchImgName: suite.dummy.EyeCatchImgName,
 		}
 		err := procedure.Update(suite.TestDB)
 
@@ -180,6 +181,7 @@ func (suite *ProcedureDaoTestSuite) TestUpdate() {
 		assert.NotEqual(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
 		assert.Empty(suite.T(), procedure.UserID, "unexpected UserID")
 		assert.Equal(suite.T(), procedure.Publish, suite.dummy.Publish, "unexpected Publish")
+		assert.Equal(suite.T(), procedure.EyeCatchImgName, suite.dummy.EyeCatchImgName, "unexpected EyeCatchImgName")
 	})
 }
 
@@ -214,11 +216,12 @@ func (suite *ProcedureDaoTestSuite) TestDelete() {
 		suite.mock.ExpectCommit()
 
 		procedure := &Procedure{
-			ID:      suite.dummy.ID,
-			Title:   suite.dummy.Title,
-			Content: suite.dummy.Content,
-			UserID:  suite.dummy.UserID,
-			Publish: suite.dummy.Publish,
+			ID:              suite.dummy.ID,
+			Title:           suite.dummy.Title,
+			Content:         suite.dummy.Content,
+			UserID:          suite.dummy.UserID,
+			Publish:         suite.dummy.Publish,
+			EyeCatchImgName: suite.dummy.EyeCatchImgName,
 		}
 		err := procedure.Delete(suite.TestDB)
 
@@ -228,5 +231,6 @@ func (suite *ProcedureDaoTestSuite) TestDelete() {
 		assert.Equal(suite.T(), procedure.Content, suite.dummy.Content, "unexpected Content")
 		assert.Equal(suite.T(), procedure.UserID, suite.dummy.UserID, "unexpected UserID")
 		assert.Equal(suite.T(), procedure.Publish, suite.dummy.Publish, "unexpected Publish")
+		assert.Equal(suite.T(), procedure.EyeCatchImgName, suite.dummy.EyeCatchImgName, "unexpected EyeCatchImgName")
 	})
 }
