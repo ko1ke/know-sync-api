@@ -5,6 +5,8 @@ import (
 	"know-sync-api/domain/users"
 	"know-sync-api/services"
 	"know-sync-api/utils/auth_utils"
+	"know-sync-api/utils/pg_error_utils"
+	"know-sync-api/utils/res_utils"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,7 +22,7 @@ func SignUp(c *gin.Context) {
 
 	if err = c.ShouldBindJSON(&user); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
@@ -32,7 +34,7 @@ func SignUp(c *gin.Context) {
 	newUser, saveErr := services.CreateUser(user)
 	if saveErr != nil {
 		logrus.Error(saveErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": saveErr.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: pg_error_utils.ParseError(saveErr).Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"id": newUser.ID, "username": newUser.Username, "email": newUser.Email})
@@ -42,15 +44,15 @@ func SignIn(c *gin.Context) {
 	var auth users.Authentication
 	if err := c.ShouldBindJSON(&auth); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
 	user, err := services.GetUserByEmail(auth.Email)
 
 	if user == nil || err != nil {
-		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logrus.Error("email is not registered")
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "Eメールが登録されていません"})
 		return
 	}
 
@@ -58,7 +60,7 @@ func SignIn(c *gin.Context) {
 
 	if !check {
 		logrus.Error("invalid password")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "パスワードが不正です"})
 		return
 	}
 
@@ -98,12 +100,12 @@ func GetUserFromToken(r *http.Request) (*users.User, error) {
 		logrus.Error(err)
 		return nil, err
 	}
-	userid, err := auth_utils.FetchAuth(metadata)
+	userId, err := auth_utils.FetchAuth(metadata)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
 	}
-	user, _ := services.GetUser(userid)
+	user, _ := services.GetUser(userId)
 	return user, nil
 }
 
@@ -111,7 +113,7 @@ func AuthUser(c *gin.Context) {
 	user, err := GetUserFromToken(c.Request)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
@@ -122,23 +124,23 @@ func SignOut(c *gin.Context) {
 	au, err := auth_utils.ExtractTokenMetadata(c.Request)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, "unauthorized")
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "トークンが不正です"})
 		return
 	}
 	deleted, delErr := auth_utils.DeleteAuth(au.AccessUuid)
 	if delErr != nil || deleted == 0 { //if any goes wrong
 		logrus.Error(delErr)
-		c.JSON(http.StatusUnauthorized, "unauthorized")
+		c.JSON(http.StatusInternalServerError, &res_utils.ErrObj{Message: "エラーが発生しました"})
 		return
 	}
-	c.JSON(http.StatusOK, "Successfully signed out")
+	c.JSON(http.StatusOK, "ログアウトしました")
 }
 
 func Refresh(c *gin.Context) {
 	mapToken := map[string]string{}
 	if err := c.ShouldBindJSON(&mapToken); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 	refreshToken := mapToken["refreshToken"]
@@ -154,13 +156,13 @@ func Refresh(c *gin.Context) {
 	//if there is an error, the token must have expired
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, "Refresh token expired")
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "ログインしてください"})
 		return
 	}
 	//is token valid?
 	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, err)
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "ログインしてください"})
 		return
 	}
 	//Since token is valid, get the uuid:
@@ -175,28 +177,28 @@ func Refresh(c *gin.Context) {
 		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["user_id"]), 10, 64)
 		if err != nil {
 			logrus.Error(err)
-			c.JSON(http.StatusUnprocessableEntity, "Error occurred")
+			c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: "エラーが発生しました"})
 			return
 		}
 		//Delete the previous Refresh Token
 		deleted, delErr := auth_utils.DeleteAuth(refreshUuid)
 		if delErr != nil || deleted == 0 { //if any goes wrong
 			logrus.Error(delErr)
-			c.JSON(http.StatusUnauthorized, "unauthorized")
+			c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "エラーが発生しました"})
 			return
 		}
 		//Create new pairs of refresh and access tokens
 		ts, createErr := auth_utils.CreateToken(uint(userId))
 		if createErr != nil {
 			logrus.Error(createErr)
-			c.JSON(http.StatusForbidden, createErr.Error())
+			c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: "エラーが発生しました"})
 			return
 		}
 		//save the tokens metadata to redis
 		saveErr := auth_utils.CreateAuth(uint(userId), ts)
 		if saveErr != nil {
 			logrus.Error(saveErr)
-			c.JSON(http.StatusForbidden, gin.H{"error": saveErr.Error()})
+			c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: "エラーが発生しました"})
 			return
 		}
 		c.JSON(http.StatusCreated, gin.H{
@@ -204,7 +206,7 @@ func Refresh(c *gin.Context) {
 			"refreshToken": ts.RefreshToken,
 		})
 	} else {
-		c.JSON(http.StatusUnauthorized, "refresh expired")
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: "ログインしてください"})
 	}
 }
 
@@ -212,7 +214,7 @@ func DeleteUser(c *gin.Context) {
 	userID, idErr := getUserID(c.Param("user_id"))
 	if idErr != nil {
 		logrus.Error(idErr)
-		c.JSON(http.StatusNotFound, idErr)
+		c.JSON(http.StatusNotFound, "ユーザーが存在しません")
 		return
 	}
 

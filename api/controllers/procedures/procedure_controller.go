@@ -3,6 +3,7 @@ package procedures
 import (
 	"fmt"
 	"know-sync-api/controllers/users"
+	"know-sync-api/utils/res_utils"
 
 	"know-sync-api/domain/procedures"
 	"know-sync-api/services"
@@ -17,7 +18,7 @@ func GetProcedure(c *gin.Context) {
 	procedureID, idErr := getProcedureID(c.Param("procedure_id"))
 	if idErr != nil {
 		logrus.Error(idErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": idErr.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: idErr.Error()})
 		return
 	}
 
@@ -27,13 +28,13 @@ func GetProcedure(c *gin.Context) {
 
 	if !isOwn {
 		logrus.Error(ownErr)
-		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: "閲覧権限がない手順です"})
 		return
 	}
 
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
@@ -44,7 +45,7 @@ func GetPublicProcedure(c *gin.Context) {
 	procedureID, idErr := getProcedureID(c.Param("procedure_id"))
 	if idErr != nil {
 		logrus.Error(idErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": idErr.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: idErr.Error()})
 		return
 	}
 
@@ -52,13 +53,13 @@ func GetPublicProcedure(c *gin.Context) {
 
 	if !procedure.Publish {
 		logrus.Errorf("procedure %v is not public", procedure.ID)
-		c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("procedure %v is not public", procedure.ID)})
+		c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: fmt.Sprintf("手順ID：%vは非公開です", procedure.ID)})
 		return
 	}
 
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
@@ -69,7 +70,7 @@ func GetProcedures(c *gin.Context) {
 	page, pageErr := getPage(c.Query("page"))
 	if pageErr != nil {
 		logrus.Error(pageErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": pageErr.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: pageErr.Error()})
 		return
 	}
 
@@ -79,14 +80,14 @@ func GetProcedures(c *gin.Context) {
 	user, err := users.GetUserFromToken(c.Request)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
 	procedures, getErr := services.GetProcedures(limit, offset, c.Query("keyword"), user.ID)
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
@@ -99,7 +100,7 @@ func GetPublicProcedures(c *gin.Context) {
 	page, pageErr := getPage(c.Query("page"))
 	if pageErr != nil {
 		logrus.Error(pageErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": pageErr.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: pageErr.Error()})
 		return
 	}
 
@@ -109,7 +110,7 @@ func GetPublicProcedures(c *gin.Context) {
 	procedures, getErr := services.GetPublicProcedures(limit, offset, c.Query("keyword"))
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
@@ -122,14 +123,14 @@ func CreateProcedure(c *gin.Context) {
 	var procedure procedures.Procedure
 	if err := c.ShouldBindJSON(&procedure); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
 	user, err := users.GetUserFromToken(c.Request)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
@@ -137,7 +138,7 @@ func CreateProcedure(c *gin.Context) {
 	newProcedure, saveErr := services.CreateProcedure(procedure)
 	if saveErr != nil {
 		logrus.Error(saveErr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": saveErr.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: saveErr.Error()})
 		return
 	}
 
@@ -148,7 +149,7 @@ func UpdateProcedure(c *gin.Context) {
 	procedureID, idErr := getProcedureID(c.Param("procedure_id"))
 	if idErr != nil {
 		logrus.Error(idErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": idErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: idErr.Error()})
 		return
 	}
 
@@ -156,21 +157,21 @@ func UpdateProcedure(c *gin.Context) {
 
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
 	isOwn, ownErr := isOwnProcedure(c.Request, currentProcedure)
 	if !isOwn {
 		logrus.Error(ownErr)
-		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: "閲覧権限がない手順です"})
 		return
 	}
 
 	var procedure procedures.Procedure
 	if err := c.ShouldBindJSON(&procedure); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
@@ -181,7 +182,7 @@ func UpdateProcedure(c *gin.Context) {
 	newProcedure, err := services.UpdateProcedure(isPartial, procedure)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 
@@ -211,27 +212,27 @@ func DeleteProcedure(c *gin.Context) {
 	procedureID, idErr := getProcedureID(c.Param("procedure_id"))
 	if idErr != nil {
 		logrus.Error(idErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": idErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: idErr.Error()})
 		return
 	}
 
 	procedure, getErr := services.GetProcedure(uint(procedureID))
 	if getErr != nil {
 		logrus.Error(getErr)
-		c.JSON(http.StatusNotFound, gin.H{"error": getErr.Error()})
+		c.JSON(http.StatusNotFound, &res_utils.ErrObj{Message: getErr.Error()})
 		return
 	}
 
 	isOwn, ownErr := isOwnProcedure(c.Request, procedure)
 	if !isOwn {
 		logrus.Error(ownErr)
-		c.JSON(http.StatusForbidden, gin.H{"error": "not your procedure"})
+		c.JSON(http.StatusForbidden, &res_utils.ErrObj{Message: "閲覧権限がない手順です"})
 		return
 	}
 
 	if err := services.DeleteProcedure(procedureID); err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, &res_utils.ErrObj{Message: err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, procedure)
