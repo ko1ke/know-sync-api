@@ -1,0 +1,5 @@
+.terraform
+current.tfplan
+terraform.tfstate
+terraform.tfstate.backup
+variables.tf
