@@ -2,13 +2,15 @@ package procedures
 
 import (
 	"fmt"
-	"know-sync-api/controllers/users"
-	"know-sync-api/utils/res_utils"
 
-	"know-sync-api/domain/procedures"
-	"know-sync-api/services"
+	"github.com/ko1ke/know-sync-api/controllers/users"
+	"github.com/ko1ke/know-sync-api/utils/res_utils"
+
 	"net/http"
 	"strconv"
+
+	"github.com/ko1ke/know-sync-api/domain/procedures"
+	"github.com/ko1ke/know-sync-api/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

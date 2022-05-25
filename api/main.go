@@ -1,12 +1,10 @@
 package main
 
 import (
-	"know-sync-api/app"
-
-	"github.com/sirupsen/logrus"
-
 	"github.com/joho/godotenv"
+	"github.com/ko1ke/know-sync-api/app"
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {

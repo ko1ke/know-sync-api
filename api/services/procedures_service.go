@@ -1,10 +1,10 @@
 package services
 
 import (
-	"know-sync-api/datasources/postgres_db"
-	"know-sync-api/domain/procedures"
-	"know-sync-api/domain/steps"
-	"know-sync-api/utils/pagination_utils"
+	"github.com/ko1ke/know-sync-api/datasources/postgres_db"
+	"github.com/ko1ke/know-sync-api/domain/procedures"
+	"github.com/ko1ke/know-sync-api/domain/steps"
+	"github.com/ko1ke/know-sync-api/utils/pagination_utils"
 
 	"gorm.io/gorm"
 )

@@ -3,12 +3,13 @@ package auth_utils
 import (
 	"errors"
 	"fmt"
-	"know-sync-api/datasources/redis_db"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ko1ke/know-sync-api/datasources/redis_db"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/twinj/uuid"

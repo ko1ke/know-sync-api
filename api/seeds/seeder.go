@@ -1,9 +1,10 @@
 package main
 
 import (
-	"know-sync-api/datasources/postgres_db"
-	"know-sync-api/seeds/seeds"
 	"log"
+
+	"github.com/ko1ke/know-sync-api/datasources/postgres_db"
+	"github.com/ko1ke/know-sync-api/seeds/seeds"
 )
 
 func main() {

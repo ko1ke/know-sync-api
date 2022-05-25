@@ -1,11 +1,11 @@
 package middlewares
 
 import (
-	"know-sync-api/utils/auth_utils"
-	"know-sync-api/utils/res_utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ko1ke/know-sync-api/utils/auth_utils"
+	"github.com/ko1ke/know-sync-api/utils/res_utils"
 )
 
 func TokenAuthMiddleware() gin.HandlerFunc {

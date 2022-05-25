@@ -1,9 +1,10 @@
 package users
 
 import (
-	"know-sync-api/utils/rand_utils"
 	"regexp"
 	"testing"
+
+	"github.com/ko1ke/know-sync-api/utils/rand_utils"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/bxcodec/faker/v3"

@@ -2,14 +2,15 @@ package users
 
 import (
 	"fmt"
-	"know-sync-api/domain/users"
-	"know-sync-api/services"
-	"know-sync-api/utils/auth_utils"
-	"know-sync-api/utils/pg_error_utils"
-	"know-sync-api/utils/res_utils"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/ko1ke/know-sync-api/domain/users"
+	"github.com/ko1ke/know-sync-api/services"
+	"github.com/ko1ke/know-sync-api/utils/auth_utils"
+	"github.com/ko1ke/know-sync-api/utils/pg_error_utils"
+	"github.com/ko1ke/know-sync-api/utils/res_utils"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"

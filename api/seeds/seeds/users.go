@@ -1,7 +1,7 @@
 package seeds
 
 import (
-	"know-sync-api/domain/users"
+	"github.com/ko1ke/know-sync-api/domain/users"
 
 	"gorm.io/gorm"
 )

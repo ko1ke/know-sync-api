@@ -1,9 +1,9 @@
 package procedures
 
 import (
-	"know-sync-api/domain/steps"
 	"time"
 
+	"github.com/ko1ke/know-sync-api/domain/steps"
 	"gorm.io/gorm"
 )
 

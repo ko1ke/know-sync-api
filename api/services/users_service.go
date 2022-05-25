@@ -1,8 +1,8 @@
 package services
 
 import (
-	"know-sync-api/datasources/postgres_db"
-	"know-sync-api/domain/users"
+	"github.com/ko1ke/know-sync-api/datasources/postgres_db"
+	"github.com/ko1ke/know-sync-api/domain/users"
 )
 
 func CreateUser(user users.User) (*users.User, error) {

@@ -1,9 +1,9 @@
 package app
 
 import (
-	"know-sync-api/controllers/procedures"
-	"know-sync-api/controllers/users"
-	"know-sync-api/middlewares"
+	"github.com/ko1ke/know-sync-api/controllers/procedures"
+	"github.com/ko1ke/know-sync-api/controllers/users"
+	"github.com/ko1ke/know-sync-api/middlewares"
 )
 
 func mapUrls() {

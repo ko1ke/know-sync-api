@@ -1,9 +1,9 @@
 package seeds
 
 import (
-	"know-sync-api/domain/procedures"
-	"know-sync-api/domain/steps"
-	"know-sync-api/domain/users"
+	"github.com/ko1ke/know-sync-api/domain/procedures"
+	"github.com/ko1ke/know-sync-api/domain/steps"
+	"github.com/ko1ke/know-sync-api/domain/users"
 
 	"gorm.io/gorm"
 )

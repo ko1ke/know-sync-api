@@ -1,4 +1,4 @@
-module know-sync-api
+module github.com/ko1ke/know-sync-api
 
 go 1.17
 
