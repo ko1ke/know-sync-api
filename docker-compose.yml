@@ -5,20 +5,20 @@ services:
     container_name: know-sync-api
     build:
       context: .
-      dockerfile: ./Dockerfile-golang
+      dockerfile: ./docker/golang/Dockerfile
     ports:
       - 4000:4000
     depends_on:
       - postgres
       - redis
     volumes:
-      - ./api:/api
+      - ./:/app
 
   postgres:
     container_name: postgres
     build:
       context: .
-      dockerfile: ./Dockerfile-postgres
+      dockerfile: ./docker/postgres/Dockerfile
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=secret
@@ -45,7 +45,6 @@ services:
       - 6379:6379
     volumes:
       - ./redis_volume:/data
-      
   # redis-commander:
   #   container_name: redis-commander
   #   hostname: redis-commander

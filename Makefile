@@ -1,5 +1,5 @@
-attach:
-	docker exec -it know-sync-api bash
+exec:
+	docker exec -it know-sync-api sh
 
 build:
 	docker-compose build --no-cache
