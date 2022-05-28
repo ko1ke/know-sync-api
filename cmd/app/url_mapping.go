@@ -1,6 +1,9 @@
 package app
 
 import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/ko1ke/know-sync-api/cmd/controllers/procedures"
 	"github.com/ko1ke/know-sync-api/cmd/controllers/users"
 	"github.com/ko1ke/know-sync-api/cmd/middlewares"
@@ -21,4 +24,11 @@ func mapUrls() {
 	router.DELETE("/procedures/:procedure_id", middlewares.TokenAuthMiddleware(), procedures.DeleteProcedure)
 	router.GET("/public_procedures", procedures.GetPublicProcedures)
 	router.GET("/public_procedures/:procedure_id", procedures.GetPublicProcedure)
+
+	// for health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "OK",
+		})
+	})
 }

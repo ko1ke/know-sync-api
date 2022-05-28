@@ -1,3 +1,4 @@
 /redis_volume
 /postgres_volume
 /tmp
+.env

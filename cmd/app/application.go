@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -48,5 +49,10 @@ func StartApp() {
 	mapUrls()
 
 	log.Println("Start App...")
-	router.Run(":4000")
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4000"
+	}
+	router.Run(":" + port)
 }
