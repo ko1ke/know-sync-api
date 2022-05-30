@@ -36,6 +36,7 @@ func StartApp() {
 		// 許可したいアクセス元の一覧
 		AllowOrigins: []string{
 			"http://localhost:3000",
+			"https://know-sync-front.vercel.app",
 		},
 		// 自分で許可するしないの処理を書きたい場合は、以下のように書くこともできる
 		// AllowOriginFunc: func(origin string) bool {
