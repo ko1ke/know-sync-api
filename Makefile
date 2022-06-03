@@ -10,4 +10,7 @@ up:
 down:
 	docker-compose down
 
-.PHONY: attach up down build
+test:
+	go test -v ./cmd/...
+
+.PHONY: exec build up down test
