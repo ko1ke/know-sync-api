@@ -47,7 +47,7 @@ func PublicIndex(db *gorm.DB, limit int, offset int, keyword string) (*[]Procedu
 	if result := db.Table("procedures").Order("updated_at DESC").
 		Select("procedures.*, users.username").
 		Joins("inner join users ON users.id=procedures.user_id").
-		Where("title LIKE ? AND publish = ?", "%"+keyword+"%", true).
+		Where("(title LIKE ? AND publish = ?) OR (users.username LIKE ? AND publish = ?)", "%"+keyword+"%", true, "%"+keyword+"%", true).
 		Limit(limit).Offset(offset).Find(&procedureIndex); result.Error != nil {
 		return nil, result.Error
 	}
