@@ -30,5 +30,5 @@ cookpad のような手順の作成・公開をスタイル付きでできるよ
 - Gin
 - JWT
 - Docker
-- Heroku
+- ~~Heroku~~ Railway
 - Terraform
